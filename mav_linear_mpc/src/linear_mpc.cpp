@@ -55,6 +55,7 @@ LinearModelPredictiveController::LinearModelPredictiveController(const ros::Node
       solve_time_average_(0),
       steady_state_calculation_(nh, private_nh),
       received_first_odometry_(false)
+
 {
   reset_integrator_service_server_ = nh_.advertiseService(
         "reset_integrator", &LinearModelPredictiveController::resetIntegratorServiceCallback, this);
@@ -82,6 +83,7 @@ void LinearModelPredictiveController::initializeParameters()
 
   //Get parameters from RosParam server
   private_nh_.param<bool>("verbose", verbose_, false);
+
 
   if (!private_nh_.getParam("mass", mass_)) {
     ROS_ERROR("mass in MPC is not loaded from ros parameter server");
@@ -324,6 +326,7 @@ void LinearModelPredictiveController::setCommandTrajectory(
 void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
     Eigen::Vector4d *ref_attitude_thrust)
 {
+
   assert(ref_attitude_thrust != nullptr);
   assert(initialized_parameters_ == true);
   ros::WallTime starting_time = ros::WallTime::now();
@@ -485,6 +488,7 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
                                          command_roll_pitch_yaw_thrust_(3) * mass_);  //[N]
 
   double diff_time = (ros::WallTime::now() - starting_time).toSec();
+
 
   if (verbose_) {
     static int counter = 0;
