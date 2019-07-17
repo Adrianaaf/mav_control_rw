@@ -104,6 +104,11 @@ class LinearModelPredictiveController
     enable_integrator_ = enable_integrator;
   }
 
+  void setMass(double mass)
+  {
+    mass_ = mass;
+  }
+
   void setControlLimits(const Eigen::VectorXd& control_limits)
   {
     //roll_max, pitch_max, yaw_rate_max, thrust_min and thrust_max
