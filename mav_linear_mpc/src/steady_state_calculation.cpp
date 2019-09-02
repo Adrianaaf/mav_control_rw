@@ -1,4 +1,4 @@
-/*
+ /*
  Copyright (c) 2015, Mina Kamel, ASL, ETH Zurich, Switzerland
 
  You can contact the author at <mina.kamel@mavt.ethz.ch>

@@ -76,6 +76,8 @@ void NonLinearModelPredictiveControllerNode::ControllerDynConfigCallback(
   Eigen::Vector3d r_command;
   Eigen::VectorXd control_limits(5);
 
+  double drone_mass = config.drone_mass;
+
   q_position << config.q_x, config.q_y, config.q_z;
   q_velocity << config.q_vx, config.q_vy, config.q_vz;
   q_attitude << config.q_roll, config.q_pitch;
@@ -84,6 +86,7 @@ void NonLinearModelPredictiveControllerNode::ControllerDynConfigCallback(
 
   control_limits << config.roll_max, config.pitch_max, config.yaw_rate_max, config.thrust_min, config
       .thrust_max;
+  nonlinear_mpc_.setMass(drone_mass);
 
   nonlinear_mpc_.setPositionPenality(q_position);
   nonlinear_mpc_.setVelocityPenality(q_velocity);

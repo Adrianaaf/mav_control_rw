@@ -82,7 +82,7 @@ void LinearModelPredictiveController::initializeParameters()
   std::vector<double> drag_coefficients;
 
   //Get parameters from RosParam server
-  private_nh_.param<bool>("verbose", verbose_, false);
+  private_nh_.param<bool>("verbose", verbose_, true);
 
 
   if (!private_nh_.getParam("mass", mass_)) {
@@ -326,7 +326,6 @@ void LinearModelPredictiveController::setCommandTrajectory(
 void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
     Eigen::Vector4d *ref_attitude_thrust)
 {
-
   assert(ref_attitude_thrust != nullptr);
   assert(initialized_parameters_ == true);
   ros::WallTime starting_time = ros::WallTime::now();
@@ -505,6 +504,7 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
           << "\t" << "thrust ref : \t" << command_roll_pitch_yaw_thrust_(3)
           << "\t" << "yawrate ref : \t" << yaw_rate_cmd);
       counter = 0;
+      ROS_INFO_STREAM("External disturbances : " <<  disturbance_observer_.getEstimatedExternalForces());
     }
     counter++;
   }

@@ -401,7 +401,13 @@ void NonlinearModelPredictiveControl::calculateRollPitchYawrateThrustCommand(
     }
   }
 
-  double yaw_rate_cmd = K_yaw_ * yaw_error + yaw_rate_ref_.front();  // feed-forward yaw_rate cmd
+  double yaw_rate_cmd = K_yaw_ * yaw_error;// + yaw_rate_ref_.front();  // feed-forward yaw_rate cmd
+
+  std::cout << "yaw_rate_cmd*****"<< yaw_rate_cmd <<std::endl;
+  std::cout << "yaw_error######"<< yaw_error <<std::endl;
+  std::cout << "yaw_rate_ref_------"<< yaw_rate_ref_.front() <<std::endl;
+
+
 
   if (yaw_rate_cmd > yaw_rate_limit_) {
     yaw_rate_cmd = yaw_rate_limit_;

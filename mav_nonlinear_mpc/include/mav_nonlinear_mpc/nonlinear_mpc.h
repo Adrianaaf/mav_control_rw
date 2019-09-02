@@ -117,6 +117,10 @@ class NonlinearModelPredictiveControl
   {
     return mass_;
   }
+  void setMass(double mass)
+  {
+    mass_ = mass;
+  }
 
   // get reference and predicted state
   bool getCurrentReference(mav_msgs::EigenTrajectoryPoint* reference) const;
