@@ -384,8 +384,13 @@ void NonlinearModelPredictiveControl::calculateRollPitchYawrateThrustCommand(
     *ref_attitude_thrust << 0, 0, 0, kGravity * mass_;
     return;
   }
+  if(yaw_rate_ref_.size() > 21){
+      command_roll_pitch_yaw_thrust_ << roll_ref, pitch_ref, yaw_ref_.front(), thrust_ref;
+  }else{
+      command_roll_pitch_yaw_thrust_ << roll_ref, pitch_ref, 0, thrust_ref;
 
-  command_roll_pitch_yaw_thrust_ << roll_ref, pitch_ref, yaw_ref_.front(), thrust_ref;
+
+  }
 
   state_ = Eigen::Map<Eigen::Matrix<double, ACADO_N + 1, ACADO_NX, Eigen::RowMajor>>(
       acadoVariables.x);
@@ -400,13 +405,20 @@ void NonlinearModelPredictiveControl::calculateRollPitchYawrateThrustCommand(
       yaw_error = yaw_error + 2.0 * M_PI;
     }
   }
+  double yaw_rate_cmd = 0;
+  if(yaw_rate_ref_.size() > 21){
+    yaw_rate_cmd = K_yaw_ * yaw_error + yaw_rate_ref_.front();
+  }else{
+    yaw_rate_cmd = K_yaw_ * yaw_error;
+    std::cout << "END######"<< yaw_error <<std::endl;
 
-  double yaw_rate_cmd = K_yaw_ * yaw_error;// + yaw_rate_ref_.front();  // feed-forward yaw_rate cmd
+  }
+   // feed-forward yaw_rate cmd
 
-  std::cout << "yaw_rate_cmd*****"<< yaw_rate_cmd <<std::endl;
+
   std::cout << "yaw_error######"<< yaw_error <<std::endl;
   std::cout << "yaw_rate_ref_------"<< yaw_rate_ref_.front() <<std::endl;
-
+  std::cout << "yaw_rate_ref_"<< yaw_rate_ref_.size() <<std::endl;
 
 
   if (yaw_rate_cmd > yaw_rate_limit_) {
