@@ -97,6 +97,9 @@ typedef boost::msm::back::state_machine<StateMachineDefinition, boost::msm::back
 class StateMachineDefinition : public msm_front::state_machine_def<StateMachineDefinition>
 {
  private:
+  ros::NodeHandle nh_;
+  ros::NodeHandle private_nh_;
+
   // States, more convenient to have in state machine.
   struct Inactive;
   struct RemoteControl;
@@ -145,13 +148,18 @@ class StateMachineDefinition : public msm_front::state_machine_def<StateMachineD
       //  +---------+-------------+---------+---------------------------+----------------------+
       msm_front::Row<Inactive, RcUpdate, RemoteControl, NoAction, euml::And_<RcModeManual, RcOn> >,
       msm_front::Row<Inactive, ReferenceUpdate, PositionHold, SetReferencePosition, NoRCTeleop>,
+      msm_front::Row<Inactive, OdometryWatchdog, InternalTransition, PrintOdometryWatchdogWarning, OdometryOutdated >,
+      msm_front::Row<Inactive, OdometryUpdate, InternalTransition, SetOdometry, NoGuard >,
+      msm_front::Row<Inactive, Takeoff, PositionHold, SetTakeoffCommands, NoRCTeleop>,
       //  +---------+-------------+---------+---------------------------+----------------------+
       msm_front::Row<RemoteControl, RcUpdate, InternalTransition, SetReferenceAttitude, RcModeNotManual >,
       msm_front::Row<RemoteControl, RcUpdate, RemoteControlReadyForOdometry, SetReferenceAttitude, RcModeManual >,
+      msm_front::Row<RemoteControl, OdometryWatchdog, InternalTransition, PrintOdometryWatchdogWarning, OdometryOutdated >,
       //  +---------+-------------+---------+---------------------------+----------------------+
       msm_front::Row<RemoteControlReadyForOdometry, RcUpdate, RemoteControl, SetReferenceAttitude, RcModeNotManual >,
       msm_front::Row<RemoteControlReadyForOdometry, RcUpdate, InternalTransition, SetReferenceAttitude, RcModeManual >,
       msm_front::Row<RemoteControlReadyForOdometry, OdometryUpdate, HaveOdometry, SetOdometry, NoGuard >,
+      msm_front::Row<RemoteControlReadyForOdometry, OdometryWatchdog, RemoteControl, PrintOdometryWatchdogWarning, OdometryOutdated >,
       //  +---------+-------------+---------+---------------------------+----------------------+
       msm_front::Row<HaveOdometry, RcUpdate, InternalTransition, SetReferenceAttitude, RcModeManual >,
       msm_front::Row<HaveOdometry, OdometryUpdate, InternalTransition, SetOdometry, NoGuard >,
@@ -163,19 +171,21 @@ class StateMachineDefinition : public msm_front::state_machine_def<StateMachineD
       msm_front::Row<PositionHold, RcUpdate, RcTeleOp, SetReferenceToCurrentPosition, RcActivePosition >,
       msm_front::Row<PositionHold, OdometryUpdate, InternalTransition, SetOdometryAndCompute, NoGuard>,
       msm_front::Row<PositionHold, ReferenceUpdate, InternalTransition, SetReferencePosition, NoGuard >,
+      msm_front::Row<PositionHold, OdometryWatchdog, RemoteControl, PrintOdometryWatchdogWarning, OdometryOutdated >,
       //  +---------+-------------+---------+---------------------------+----------------------+
       msm_front::Row<RcTeleOp, RcUpdate, RemoteControl, NoAction, RcModeManual>,
       msm_front::Row<RcTeleOp, BackToPositionHold, PositionHold, NoAction, NoGuard>,
       msm_front::Row<RcTeleOp, Takeoff, PositionHold, SetTakeoffCommands, NoGuard>,
       msm_front::Row<RcTeleOp, RcUpdate, InternalTransition, SetReferenceFromRc, RcActivePosition >,
       //msm_front::Row<RcTeleOp, RcUpdate, InternalTransition, SetReferenceToCurrentPosition, RcInactivePosition >,
-      msm_front::Row<RcTeleOp, OdometryUpdate, InternalTransition, SetOdometryAndCompute, NoGuard>
+      msm_front::Row<RcTeleOp, OdometryUpdate, InternalTransition, SetOdometryAndCompute, NoGuard>,
+      msm_front::Row<RcTeleOp, OdometryWatchdog, RemoteControl, PrintOdometryWatchdogWarning, OdometryOutdated >
       >
   {
   };
 
  public:
-  StateMachineDefinition(ros::NodeHandle& nh, ros::NodeHandle& private_nh,
+  StateMachineDefinition(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh,
                          std::shared_ptr<PositionControllerInterface> controller);
 
   template<class Event, class FSM>
@@ -203,6 +213,7 @@ private:
   tf::TransformBroadcaster transform_broadcaster_;
   ros::Publisher current_reference_publisher_;
   ros::Publisher predicted_state_publisher_;
+  ros::Publisher full_predicted_state_publisher_;
   Parameters parameters_;
   mav_msgs::EigenOdometry current_state_;
   mav_msgs::EigenTrajectoryPointDeque current_reference_queue_;
@@ -444,8 +455,8 @@ private:
 
   struct SetTakeoffCommands
   {
-    template<class FSM>
-    void operator()(const Takeoff& evt, FSM& fsm, RcTeleOp& src_state, PositionHold&)
+    template<class FSM, class SourceState>
+    void operator()(const Takeoff& evt, FSM& fsm, SourceState& src_state, PositionHold&)
     {
       constexpr double dt = 0.01;  // TODDO(acmarkus): FIX!!!!!!
       constexpr double seconds_to_ns = 1.0e9;
@@ -498,10 +509,16 @@ private:
 
   struct PrintOdometryWatchdogWarning
   {
-    template<class FSM>
-    void operator()(const OdometryWatchdog&, FSM&, HaveOdometry& src_state, RemoteControl&)
+    template<class FSM, class Evt, class SourceState, class TargetState>
+    void operator()(const Evt& evt, FSM& fsm, SourceState&, TargetState&)
     {
-      ROS_WARN("Odometry watchdog triggered -- going back to manual remote control");
+      if (!fsm.use_rc_teleop_) {
+        ROS_WARN_STREAM("No odometry message received in the last "<< kOdometryOutdated_ns/1000000000.0 << " seconds!");
+      } else {
+        ROS_WARN_STREAM(
+            "No odometry message received in the last "<< kOdometryOutdated_ns/1000000000.0 << " seconds!"
+            " -- going back to manual remote control");
+      }
     }
   };
 
@@ -558,7 +575,7 @@ private:
     template<class FSM, class SourceState, class TargetState>
     bool operator()(const OdometryWatchdog& evt, FSM& fsm, SourceState&, TargetState&)
     {
-      return (ros::Time::now().toNSec() - fsm.current_state_.timestamp_ns) > kOdometryOutdated_ns;
+      return std::abs(static_cast<int64_t>(ros::Time::now().toNSec()) - fsm.current_state_.timestamp_ns) > kOdometryOutdated_ns;
     }
   };
 

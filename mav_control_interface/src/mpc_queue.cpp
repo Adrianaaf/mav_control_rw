@@ -249,6 +249,7 @@ void MPCQueue::updateQueue()
     while (current_queue_size_ < minimum_queue_size_)
       pushBackPoint(point);
   }
+  //printQueue();
 }
 
 void MPCQueue::publishQueueMarker(const ros::TimerEvent&)
