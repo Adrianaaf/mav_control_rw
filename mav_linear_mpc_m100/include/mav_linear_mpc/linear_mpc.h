@@ -103,11 +103,7 @@ class LinearModelPredictiveController
   {
     enable_integrator_ = enable_integrator;
   }
-
-  void setMass(double mass)
-  {
-    mass_ = mass;
-  }
+  
 
   void setControlLimits(const Eigen::VectorXd& control_limits)
   {
@@ -115,8 +111,8 @@ class LinearModelPredictiveController
     roll_limit_ = control_limits(0);
     pitch_limit_ = control_limits(1);
     yaw_rate_limit_ = control_limits(2);
-    thrust_min_ = control_limits(3) - kGravity;
-    thrust_max_ = control_limits(4) - kGravity;
+    thrust_min_ = control_limits(3);
+    thrust_max_ = control_limits(4);
   }
 
   void applyParameters();
@@ -150,7 +146,6 @@ class LinearModelPredictiveController
   static constexpr int kPredictionHorizonSteps = 20;
   static constexpr double kGravity = 9.8066;
 
-
   // ros node handles
   ros::NodeHandle nh_, private_nh_;
 
@@ -178,6 +173,8 @@ class LinearModelPredictiveController
   double roll_gain_;
   double pitch_time_constant_;
   double pitch_gain_;
+  double vertical_velocity_gain_;
+  double vertical_velocity_time_constant_;
   Eigen::Vector3d drag_coefficients_;
   double mass_;
 
@@ -237,6 +234,13 @@ class LinearModelPredictiveController
   // most recent odometry information
   mav_msgs::EigenOdometry odometry_;
   bool received_first_odometry_;
+  
+  // PID gains for height velocity control.
+  double Kp_dz_;
+  double Ki_dz_;
+  double Kd_dz_;
+  double Ki_max_dz_;
+  double Ki_min_dz_;
 };
 
 }  // end namespace mav_control

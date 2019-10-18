@@ -64,8 +64,6 @@ void LinearModelPredictiveControllerNode::DynConfigCallback(mav_linear_mpc::Line
   Eigen::Vector3d r_command;
   Eigen::Vector3d r_delta_command;
   Eigen::VectorXd control_limits(5);
-  double drone_mass = config.drone_mass;
-
 
   q_position << config.q_x, config.q_y, config.q_z;
   q_velocity << config.q_vx, config.q_vy, config.q_vz;
@@ -75,7 +73,7 @@ void LinearModelPredictiveControllerNode::DynConfigCallback(mav_linear_mpc::Line
   r_delta_command << config.r_droll, config.r_dpitch, config.r_dthrust;
 
   control_limits << config.roll_max, config.pitch_max, config.yaw_rate_max, config.thrust_min, config.thrust_max;
-  linear_mpc_.setMass(drone_mass);
+
   linear_mpc_.setPositionPenality(q_position);
   linear_mpc_.setVelocityPenality(q_velocity);
   linear_mpc_.setAttitudePenality(q_attitude);
@@ -89,7 +87,6 @@ void LinearModelPredictiveControllerNode::DynConfigCallback(mav_linear_mpc::Line
 
   linear_mpc_.setEnableIntegrator(config.enable_integrator);
   linear_mpc_.setEnableOffsetFree(config.enable_offset_free);
-
   linear_mpc_.applyParameters();
 }
 
