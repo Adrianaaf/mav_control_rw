@@ -40,8 +40,8 @@
   r_dpitch : 0.15
   r_dthrust: 0.001
 
-  roll_max  : 0.2 #0.3234 in rad
-  pitch_max : 0.2 #0.3234 in rad
+  roll_max  : 0.3234 #in rad
+  pitch_max : 0.3234 #in rad
   thrust_min: -2 #m/s
   thrust_max: 2 #m/s
 
@@ -54,8 +54,8 @@
   use_height_error_integrator : false
   use_KF_estimated_state : false
   
-  sampling_time: 0.03333333    #IMPORTANT: set this equal to the rate of odometry msg
-  #sampling_time: 0.0025
+  #sampling_time: 0.03333333    #IMPORTANT: set this equal to the rate of odometry msg
+  sampling_time: 0.004138 #0.0025
   prediction_sampling_time: 0.1
 
   Ki_xy: 0.2
