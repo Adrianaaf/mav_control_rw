@@ -154,6 +154,14 @@ class LinearModelPredictiveController
   bool resetIntegratorServiceCallback(std_srvs::Empty::Request  &req,
                                       std_srvs::Empty::Response &res);
 
+  ros::Subscriber externalYawSubscriber;
+
+  void externalYawCallback(const nav_msgs::OdometryConstPtr& msg);
+
+  float external_yaw_value;
+  float external_yaw_bool;
+
+
 
   //initialize parameters
   void initializeParameters();

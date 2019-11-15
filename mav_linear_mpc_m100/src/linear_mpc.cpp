@@ -61,6 +61,8 @@ LinearModelPredictiveController::LinearModelPredictiveController(const ros::Node
 
   initializeParameters();
 
+  externalYawSubscriber = nh_.subscribe("externalYaw", 1,&LinearModelPredictiveController::externalYawCallback, this);
+
   mpc_queue_.initializeQueue(sampling_time_, prediction_sampling_time_);
 }
 
@@ -76,8 +78,20 @@ bool LinearModelPredictiveController::resetIntegratorServiceCallback(std_srvs::E
   return true;
 }
 
+void LinearModelPredictiveController::externalYawCallback(const nav_msgs::OdometryConstPtr& msg){
+
+    external_yaw_bool = true;
+    external_yaw_value = msg->pose.pose.orientation.z;
+    ROS_INFO_STREAM("external_yaw_value" << external_yaw_value);
+
+
+}
+
 void LinearModelPredictiveController::initializeParameters()
 {
+
+  external_yaw_bool = false;
+
   std::vector<double> drag_coefficients;
 
   //Get parameters from RosParam server
@@ -467,6 +481,12 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
   command_roll_pitch_yaw_thrust_(1) = ux * cos(yaw) - uy * sin(yaw);
   command_roll_pitch_yaw_thrust_(2) = yaw_ref_.front();
 
+
+  if(external_yaw_bool){
+      command_roll_pitch_yaw_thrust_(2) = external_yaw_value;
+  }
+
+
   // yaw controller
   double yaw_error = command_roll_pitch_yaw_thrust_(2) - yaw;
 
@@ -478,7 +498,12 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
     }
   }
 
-  double yaw_rate_cmd = K_yaw_ * yaw_error + yaw_rate_ref_.front(); // feed-forward yaw_rate cmd
+
+
+  double yaw_rate_cmd = K_yaw_ * yaw_error; //+ yaw_rate_ref_.front(); // feed-forward yaw_rate cmd
+
+  ROS_INFO_STREAM("yaw_rate_limit_" << yaw_rate_limit_);
+
 
   if (yaw_rate_cmd > yaw_rate_limit_) {
     yaw_rate_cmd = yaw_rate_limit_;
