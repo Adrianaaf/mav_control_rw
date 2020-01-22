@@ -45,7 +45,7 @@
   thrust_min: -2 #m/s
   thrust_max: 2 #m/s
 
-  K_yaw : 0.4
+  K_yaw : 0.55
   Ki_height : 0.2
 
   height_error_integration_limit : 5

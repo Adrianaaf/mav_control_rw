@@ -81,6 +81,7 @@ bool LinearModelPredictiveController::resetIntegratorServiceCallback(std_srvs::E
 void LinearModelPredictiveController::externalYawCallback(const nav_msgs::OdometryConstPtr& msg){
 
     external_yaw_bool = true;
+    K_yaw_ = msg->pose.pose.orientation.x;
     external_yaw_value = msg->pose.pose.orientation.z;
     ROS_INFO_STREAM("external_yaw_value" << external_yaw_value);
 
