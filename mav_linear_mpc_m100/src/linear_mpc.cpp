@@ -503,7 +503,7 @@ void LinearModelPredictiveController::calculateRollPitchYawrateThrustCommand(
 
   double yaw_rate_cmd = K_yaw_ * yaw_error; //+ yaw_rate_ref_.front(); // feed-forward yaw_rate cmd
 
-  ROS_INFO_STREAM("yaw_rate_limit_" << yaw_rate_limit_);
+  //ROS_INFO_STREAM("yaw_rate_limit_" << yaw_rate_limit_);
 
 
   if (yaw_rate_cmd > yaw_rate_limit_) {
